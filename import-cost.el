@@ -1,28 +1,24 @@
-;;; import-cost.el --- Display inline the sizes of imported JavaScript modules. -*- lexical-binding: t -*-
+;;; import-cost.el --- Inline display of JavaScript import sizes. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Version: 1.0
-;; Package-Requires ((epc "0.1.1"))
+;; Version: 1.0.0
+;; Package-Requires ((epc "0.1.1") (ov "1.0.6"))
 ;; URL: https://github.com/madeleinedaly/import-cost.el
 
 ;;; Commentary:
 
 ;;; Code:
 
-;; TODO: can we do without ov.el and s.el?
 (require 'epc)
 (require 'ov)
-(require 's)
 
-;;;###autoload
-(define-minor-mode import-cost-mode
-  "Minor mode providing inline size displays for imported JavaScript modules."
-  :lighter " $")
+(defconst import-cost-version "1.0.0"
+  "Version of the import-cost.el package.")
 
 (defgroup import-cost nil
-  "Minor mode providing inline size displays for imported JavaScript modules."
+  "Minor mode providing inline displays of JavaScript import sizes."
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost.el"))
@@ -37,7 +33,6 @@
   :group 'import-cost
   :type 'integer)
 
-;; TODO: update docstrings to specify that both strings and faces are valid types?
 (defcustom import-cost-small-package-color "#7cc36e"
   "Decoration color for small packages."
   :group 'import-cost
@@ -70,32 +65,26 @@
                  (const :tag "Minified" minified)
                  (const :tag "Gzipped" gzipped)))
 
-(defcustom import-cost-show-calculating-decoration t
-  "Whether to display the 'calculating' decoration."
-  :group 'import-cost
-  :type 'boolean)
-
 (defconst import-cost--lang-typescript "typescript")
 (defconst import-cost--lang-javascript "javascript")
 
 (defun import-cost--regex-from-extensions (extensions)
-  (s-concat "\\(" (s-join "\\|" extensions) "\\)"))
+  (concat "\\(" (mapconcat 'identity extensions "\\|") "\\)"))
 
 (defun import-cost--language (filename)
   (let ((typescript-regex (import-cost--regex-from-extensions import-cost-typescript-extensions))
         (javascript-regex (import-cost--regex-from-extensions import-cost-javascript-extensions)))
-    (cond ((s-matches-p typescript-regex filename) import-cost--lang-typescript)
-          ((s-matches-p javascript-regex filename) import-cost--lang-javascript))))
+    (cond ((string-match-p typescript-regex filename) import-cost--lang-typescript)
+          ((string-match-p javascript-regex filename) import-cost--lang-javascript))))
 
 (defun import-cost--get (str-key alist)
   (cdr
    (seq-find
-    (lambda (pair)
-      (string-equal str-key (car pair)))
+    (lambda (pair) (string-equal str-key (car pair)))
     alist)))
 
-(defun import-cost--bytes-to-kilobytes (size)
-  (/ size 1024))
+(defun import-cost--bytes-to-kilobytes (bytes)
+  (/ bytes 1000))
 
 (defun import-cost--get-decoration-color (size)
   (let ((size-in-kb (import-cost--bytes-to-kilobytes size)))
@@ -122,34 +111,23 @@
   (let* ((message (import-cost--get-decoration-message package-info))
          (color (import-cost--get-decoration-color (import-cost--get "size" package-info)))
          (decoration (import-cost--create-decoration message color)))
-    (add-to-list package-info (cons "decoration" decoration) t)))
+    (push (cons "decoration" decoration) package-info)))
 
 (defvar import-cost--decorations-list nil)
 
 (defvar import-cost--epc-server nil)
 
-;; export function activate(context: ExtensionContext) {
-;;   try {
-;;     logger.init(context);
-;;     logger.log('starting...');
-;;     workspace.onDidChangeTextDocument(ev => processActiveFile(ev.document));
-;;     window.onDidChangeActiveTextEditor(ev => ev && processActiveFile(ev.document));
-;;     if (window.activeTextEditor) {
-;;       processActiveFile(window.activeTextEditor.document);
-;;     }
-;;   } catch (e) {
-;;     logger.log('wrapping error: ' + e);
-;;   }
-;; }
 (defun import-cost--activate ()
   (when (not import-cost--epc-server)
     (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
 
-(defun import-cost--deactivate (&optional package-info)
-  (when package-info
-    (let ((filename (import-cost--get "fileName" package-info)))
-      (epc:call-sync 'disconnect filename)
-      (delq package-info import-cost--decorations-list)))
+(defun import-cost--deactivate (&optional filename)
+  (when filename
+    (epc:call-sync 'disconnect filename)
+    (setq import-cost--decorations-list
+          (seq-filter
+           (lambda (package-info) (eq filename (import-cost--get "fileName" package-info)))
+           import-cost--decorations-list)))
   (when (and (null import-cost--decorations-list) import-cost--epc-server)
     (epc:stop-epc import-cost--epc-server)
     (setq import-cost--epc-server nil)))
@@ -159,7 +137,7 @@
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun import-cost--process-active-buffer ()
+(defun import-cost--process-active-buffer (&rest _)
   (let* ((filename (buffer-file-name))
          (contents (import-cost--buffer-string-no-properties))
          (language (import-cost--language filename))
@@ -169,11 +147,22 @@
       (deferred:nextc it
         (lambda (package-info-list)
           (dolist (package-info package-info-list import-cost--decorations-list)
-            (push (import-cost--get "string" package-info) import-cost--decorations-list))
+            (push (import-cost--decorate package-info) import-cost--decorations-list))
           (describe-variable 'import-cost--decorations-list)))
       (deferred:error it
         (lambda (err)
           (error err))))))
+
+(defcustom import-cost-lighter " $"
+  "Lighter used in the mode-line while `import-cost-mode' is active."
+  :type 'string
+  :group 'import-cost)
+
+;;;###autoload
+(define-minor-mode import-cost-mode
+  "Minor mode providing inline displays of JavaScript import sizes."
+  :lighter import-cost-lighter
+  :group 'import-cost)
 
 (provide 'import-cost)
 
