@@ -1,8 +1,10 @@
 'use strict';
 const fs = require('fs');
+const os = require('os');
 
 const handleError = error => {
   fs.appendFileSync('errors.log', [new Date(), error].join(': '));
+  process.exit(error.code || 1);
 };
 
 const isInstalled = dependency => {
@@ -66,6 +68,10 @@ const configureServer = server => {
 };
 
 process.on('unhandledRejection', handleError);
+
+// epc:start-epc expects this
+const [,,port] = process.argv;
+process.stdout.write(port.concat(os.EOL));
 
 ensureInstall()
   .then(startServer)

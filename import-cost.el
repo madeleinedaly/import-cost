@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-25 21:38:30>
+;; Last-Updated: <2018-04-26 22:04:08>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -28,6 +28,11 @@
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost.el"))
+
+(defcustom import-cost-epc-server-port 1337
+  "The port that the EPC server uses."
+  :group 'import-cost
+  :type 'integer)
 
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
@@ -86,7 +91,7 @@
           ((string-match-p javascript-regex filename) import-cost--lang-javascript))))
 
 (defun import-cost--get (str-key alist)
-  "Returns the cdr of the element in ALIST that has STR-KEY as its car."
+  "Returns the cdr of the first element in ALIST that has STR-KEY as its car."
   (cdr
    (seq-find
     (lambda (pair) (string-equal str-key (car pair)))
@@ -135,16 +140,18 @@ a new element added that has the form (\"decoration\" . overlay)."
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
 not already running."
   (when (not import-cost--epc-server)
-    (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
+    (let ((args (list "server.js" (number-to-string import-cost-epc-server-port))))
+      (setq import-cost--epc-server (epc:start-epc "node" args)))))
 
 (defun import-cost--deactivate (&optional filename)
   "Deactivates `import-cost-mode' in the current buffer.
 If no other buffers are actively using this minor mode, the EPC server will be stopped and unlinked."
   (when filename
-    (epc:call-sync 'disconnect filename)
+    (epc:call-sync import-cost--epc-server 'disconnect filename)
     (setq import-cost--decorations-list
           (seq-filter
-           (lambda (package-info) (eq filename (import-cost--get "fileName" package-info)))
+           (lambda (package-info)
+             (string-equal filename (import-cost--get "fileName" package-info)))
            import-cost--decorations-list)))
   (when (and (null import-cost--decorations-list) import-cost--epc-server)
     (epc:stop-epc import-cost--epc-server)
