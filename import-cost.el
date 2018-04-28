@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-28 11:51:55>
+;; Last-Updated: <2018-04-28 12:01:10>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -106,13 +106,11 @@
 (defun import-cost--get-decoration-message (package-info)
   "Returns the string that will be used to decorate the line described by PACKAGE-INFO."
   (let* ((size (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info)))
-         (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info)))
-         (message-string
-          (cond ((<= size 0) "")
-                ((eq import-cost-bundle-size-decoration 'both) (format "%dKB (gzipped: %dKB)" size gzip))
-                ((eq import-cost-bundle-size-decoration 'minified) (format "%dKB" size))
-                ((eq import-cost-bundle-size-decoration 'gzipped) (format "%dKB" gzip)))))
-    (concat " " message-string)))
+         (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info))))
+    (cond ((<= size 0) "")
+          ((eq import-cost-bundle-size-decoration 'both) (format " %dKB (gzipped: %dKB)" size gzip))
+          ((eq import-cost-bundle-size-decoration 'minified) (format " %dKB" size))
+          ((eq import-cost-bundle-size-decoration 'gzipped) (format " %dKB" gzip)))))
 
 (defun import-cost--create-decoration! (line message-string color)
   "Adds an overlay at end of LINE, consisting of MESSAGE-STRING with foreground-color COLOR."
