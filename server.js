@@ -1,9 +1,7 @@
 'use strict';
-const fs = require('fs');
-const os = require('os');
 
 const handleError = error => {
-  fs.appendFileSync('errors.log', [new Date(), error].join(': '));
+  require('fs').appendFileSync('errors.log', [new Date(), error].join(': ').concat('\n'));
   process.exit(error.code || 1);
 };
 
@@ -16,7 +14,7 @@ const isInstalled = dependency => {
   }
 };
 
-const ensureInstall = () => {
+const ensureDepdenencies = () => {
   const {dependencies} = require('./package.json');
   if (Object.keys(dependencies).every(isInstalled)) {
     return Promise.resolve();
@@ -33,7 +31,7 @@ const startServer = () => {
   return epc.startServer();
 };
 
-const configureServer = server => {
+const defineMethods = server => {
   const {importCost, cleanup} = require('import-cost');
   const _ = require('lodash');
   const emitters = {};
@@ -67,32 +65,12 @@ const configureServer = server => {
   return server;
 };
 
-process.on('unhandledRejection', handleError);
+if (require.main === module) {
+  process.on('unhandledRejection', handleError);
 
-// epc:start-epc expects this
-const [,,port] = process.argv;
-process.stdout.write(port.concat(os.EOL));
-
-ensureInstall()
-  .then(startServer)
-  .then(configureServer)
-  .then(server => server.wait())
-  .catch(handleError);
-
-/*
-
-  (import-cost--deactivate)
-  (import-cost--activate)
-  (import-cost--process-active-buffer)
-
-
-  (save-excursion
-    (goto-char (point-min))
-    (search-forward "require('lodash')" nil t)
-    (end-of-line)
-    (setq my-overlay (ov-create (point) (point)))
-    (ov-set my-overlay 'after-string
-                       (propertize (format "  %dKB" (/ 72269 1024))
-                                   'font-lock-face '(:foreground "#d44e40"))))
-
-*/
+  ensureDepdenencies()
+    .then(startServer)
+    .then(defineMethods)
+    .then(server => server.wait())
+    .catch(handleError);
+}

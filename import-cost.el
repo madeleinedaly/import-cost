@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-26 22:04:08>
+;; Last-Updated: <2018-04-28 10:36:14>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -28,11 +28,6 @@
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost.el"))
-
-(defcustom import-cost-epc-server-port 1337
-  "The port that the EPC server uses."
-  :group 'import-cost
-  :type 'integer)
 
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
@@ -110,24 +105,30 @@
 
 (defun import-cost--get-decoration-message (package-info)
   "Returns the string that will be used to decorate the line described by PACKAGE-INFO."
-  (let ((size (format "%dKB" (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info))))
-        (gzip (format "%dKB" (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info)))))
+  (let ((size (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info)))
+        (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info))))
     (cond ((<= size 0) "")
-          ((eq import-cost-bundle-size-decoration 'both) (format "%s (gzipped: %s)" size gzip))
-          ((eq import-cost-bundle-size-decoration 'minified) size)
-          ((eq import-cost-bundle-size-decoration 'gzipped) gzip))))
+          ((eq import-cost-bundle-size-decoration 'both) (format "%dKB (gzipped: %dKB)" size gzip))
+          ((eq import-cost-bundle-size-decoration 'minified) (format "%dKB" size))
+          ((eq import-cost-bundle-size-decoration 'gzipped) (format "%dKB" gzip)))))
+
+(defun import-cost--create-decoration (line message-string color)
+  "Adds an overlay at end of LINE, consisting of MESSAGE-STRING with foreground-color COLOR."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line line)
+    (goto-char (line-end-position))
+    (let ((overlay (ov-create (point) (point)))
+          (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
+      (ov-set overlay 'after-string after-string))))
 
 (defun import-cost--decorate (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO, and returns PACKAGE-INFO with
 a new element added that has the form (\"decoration\" . overlay)."
-  (let* ((search-string (import-cost--get "string" package-info))
+  (let* ((line (- (import-cost--get "line" package-info) 1))
          (message-string (import-cost--get-decoration-message package-info))
          (color (import-cost--get-decoration-color (import-cost--get "size" package-info)))
-         (decoration (save-excursion
-                       (search-forward search-string)
-                       (let ((overlay (ov-create (point) (point)))
-                             (after-string (propertize message-string 'font-lock-face '(:foreground color))))
-                         (ov-set overlay 'after-string after-string)))))
+         (decoration (import-cost--create-decoration line message-string color)))
     (push (cons "decoration" decoration) package-info)))
 
 (defvar import-cost--decorations-list nil
@@ -140,8 +141,17 @@ a new element added that has the form (\"decoration\" . overlay)."
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
 not already running."
   (when (not import-cost--epc-server)
-    (let ((args (list "server.js" (number-to-string import-cost-epc-server-port))))
-      (setq import-cost--epc-server (epc:start-epc "node" args)))))
+    (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
+
+(defun import-cost--remove-decoration (filename)
+  (let* ((package-info
+          (seq-find
+           (lambda (alist)
+             (string-equal filename (import-cost--get "fileName" alist)))
+           import-cost--decorations-list))
+         (decoration (import-cost--get "decoration" package-info))))
+  (ov-reset decoration)
+  (delq package-info import-cost--decorations-list))
 
 (defun import-cost--deactivate (&optional filename)
   "Deactivates `import-cost-mode' in the current buffer.
@@ -150,8 +160,7 @@ If no other buffers are actively using this minor mode, the EPC server will be s
     (epc:call-sync import-cost--epc-server 'disconnect filename)
     (setq import-cost--decorations-list
           (seq-filter
-           (lambda (package-info)
-             (string-equal filename (import-cost--get "fileName" package-info)))
+           (lambda (package-info) (string-equal filename (import-cost--get "fileName" package-info)))
            import-cost--decorations-list)))
   (when (and (null import-cost--decorations-list) import-cost--epc-server)
     (epc:stop-epc import-cost--epc-server)
@@ -174,8 +183,7 @@ successful response adds import size overlays to the buffer."
       (epc:call-deferred import-cost--epc-server 'calculate args)
       (deferred:nextc it
         (lambda (package-info-list)
-          (dolist (package-info package-info-list import-cost--decorations-list)
-            (push (import-cost--decorate package-info) import-cost--decorations-list))
+          (setq import-cost--decorations-list (seq-map 'import-cost--decorate package-info-list))
           (describe-variable 'import-cost--decorations-list)))
       (deferred:error it
         (lambda (err)
