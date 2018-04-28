@@ -1,7 +1,9 @@
 'use strict';
 
 const handleError = error => {
-  require('fs').appendFileSync('errors.log', [new Date(), error].join(': ').concat('\n'));
+  const {appendFileSync} = require('fs');
+  const loggedError = [new Date(), error].join(': ').concat('\n');
+  appendFileSync('errors.log', loggedError);
   process.exit(error.code || 1);
 };
 
@@ -33,7 +35,6 @@ const startServer = () => {
 
 const defineMethods = server => {
   const {importCost, cleanup} = require('import-cost');
-  const _ = require('lodash');
   const emitters = {};
 
   server.defineMethod('calculate', (filename, contents, language) => new Promise(resolve => {

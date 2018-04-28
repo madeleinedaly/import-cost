@@ -1,11 +1,11 @@
-;;; import-cost.el --- Inline display of JavaScript import sizes. -*- lexical-binding: t -*-
+;;; import-cost.el --- Minor mode providing inline displays of JavaScript import sizes
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-28 10:36:14>
+;; Last-Updated: <2018-04-28 11:26:08>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -105,14 +105,16 @@
 
 (defun import-cost--get-decoration-message (package-info)
   "Returns the string that will be used to decorate the line described by PACKAGE-INFO."
-  (let ((size (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info)))
-        (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info))))
-    (cond ((<= size 0) "")
-          ((eq import-cost-bundle-size-decoration 'both) (format "%dKB (gzipped: %dKB)" size gzip))
-          ((eq import-cost-bundle-size-decoration 'minified) (format "%dKB" size))
-          ((eq import-cost-bundle-size-decoration 'gzipped) (format "%dKB" gzip)))))
+  (let* ((size (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info)))
+         (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info)))
+         (message-string
+          (cond ((<= size 0) "")
+                ((eq import-cost-bundle-size-decoration 'both) (format "%dKB (gzipped: %dKB)" size gzip))
+                ((eq import-cost-bundle-size-decoration 'minified) (format "%dKB" size))
+                ((eq import-cost-bundle-size-decoration 'gzipped) (format "%dKB" gzip)))))
+    (concat " " message-string)))
 
-(defun import-cost--create-decoration (line message-string color)
+(defun import-cost--create-decoration! (line message-string color)
   "Adds an overlay at end of LINE, consisting of MESSAGE-STRING with foreground-color COLOR."
   (save-excursion
     (goto-char (point-min))
@@ -122,7 +124,7 @@
           (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
       (ov-set overlay 'after-string after-string))))
 
-(defun import-cost--decorate (package-info)
+(defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO, and returns PACKAGE-INFO with
 a new element added that has the form (\"decoration\" . overlay)."
   (let* ((line (- (import-cost--get "line" package-info) 1))
@@ -137,13 +139,13 @@ a new element added that has the form (\"decoration\" . overlay)."
 (defvar import-cost--epc-server nil
   "A reference to the current EPC server instance.")
 
-(defun import-cost--activate ()
+(defun import-cost--activate! ()
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
 not already running."
   (when (not import-cost--epc-server)
     (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
 
-(defun import-cost--remove-decoration (filename)
+(defun import-cost--undecorate! (filename)
   (let* ((package-info
           (seq-find
            (lambda (alist)
@@ -153,15 +155,12 @@ not already running."
   (ov-reset decoration)
   (delq package-info import-cost--decorations-list))
 
-(defun import-cost--deactivate (&optional filename)
+(defun import-cost--deactivate! (&optional filename)
   "Deactivates `import-cost-mode' in the current buffer.
 If no other buffers are actively using this minor mode, the EPC server will be stopped and unlinked."
   (when filename
-    (epc:call-sync import-cost--epc-server 'disconnect filename)
-    (setq import-cost--decorations-list
-          (seq-filter
-           (lambda (package-info) (string-equal filename (import-cost--get "fileName" package-info)))
-           import-cost--decorations-list)))
+    (epc:call-sync import-cost--epc-server 'disconnect (list filename))
+    (import-cost--undecorate! filename))
   (when (and (null import-cost--decorations-list) import-cost--epc-server)
     (epc:stop-epc import-cost--epc-server)
     (setq import-cost--epc-server nil)))
@@ -172,7 +171,7 @@ If no other buffers are actively using this minor mode, the EPC server will be s
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun import-cost--process-active-buffer (&rest _)
+(defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
   (let* ((filename (buffer-file-name))
