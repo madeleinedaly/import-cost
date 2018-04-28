@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-28 11:36:22>
+;; Last-Updated: <2018-04-28 11:51:55>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -185,9 +185,7 @@ successful response adds import size overlays to the buffer."
         (lambda (package-info-list)
           (setq import-cost--decorations-list (seq-map 'import-cost--decorate package-info-list))
           (describe-variable 'import-cost--decorations-list)))
-      (deferred:error it
-        (lambda (err)
-          (error err))))))
+      (deferred:error it 'error))))
 
 (defcustom import-cost-lighter " $"
   "Lighter used in the mode-line while `import-cost-mode' is active."
