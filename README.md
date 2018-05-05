@@ -2,7 +2,7 @@
 
 ## About
 
-An Emacs port of [import-cost](https://github.com/wix/import-cost/tree/master/packages/vscode-import-cost).
+An Emacs port of the [Import Cost](https://github.com/wix/import-cost/) VSCode extension.
 
 ## Requirements
 
