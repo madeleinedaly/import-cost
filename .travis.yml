@@ -6,6 +6,7 @@ before_install:
   - cask --debug
 env:
   - EVM_EMACS=emacs-25.1-travis
+  - EVM_EMACS=emacs-git-snapshot-travis
 script:
   - emacs --version
   - cask exec ert-runner
