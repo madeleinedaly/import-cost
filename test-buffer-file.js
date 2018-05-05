@@ -1,6 +1,7 @@
 'use strict';
 const _ = require('lodash');    // this is a comment
 const capitalize = require('lodash/capitalize');
+const {cleanup} = require('import-cost');
 
 console.log(capitalize('hello world'));
 

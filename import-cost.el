@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-04-28 12:01:10>
+;; Last-Updated: <2018-05-04 21:48:22>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -93,12 +93,12 @@
     alist)))
 
 (defun import-cost--bytes-to-kilobytes (bytes)
-  "Returns the size of BYTES in kilobytes."
-  (/ bytes 1000))
+  "Returns BYTES in kilobytes."
+  (/ bytes 1000.0))
 
-(defun import-cost--get-decoration-color (size)
+(defun import-cost--get-decoration-color (package-info)
   "Returns the color that will be used to decorate the import size overlay."
-  (let ((size-in-kb (import-cost--bytes-to-kilobytes size)))
+  (let ((size-in-kb (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info))))
     (cond ((< size-in-kb import-cost-small-package-size) import-cost-small-package-color)
           ((< size-in-kb import-cost-medium-package-size) import-cost-medium-package-color)
           (t import-cost-large-package-color))))
@@ -112,24 +112,21 @@
           ((eq import-cost-bundle-size-decoration 'minified) (format " %dKB" size))
           ((eq import-cost-bundle-size-decoration 'gzipped) (format " %dKB" gzip)))))
 
-(defun import-cost--create-decoration! (line message-string color)
-  "Adds an overlay at end of LINE, consisting of MESSAGE-STRING with foreground-color COLOR."
-  (save-excursion
-    (goto-char (point-min))
-    (forward-line line)
-    (goto-char (line-end-position))
-    (let ((overlay (ov-create (point) (point)))
-          (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
-      (ov-set overlay 'after-string after-string))))
-
 (defun import-cost--decorate! (package-info)
-  "Adds an overlay at the end of the line described by PACKAGE-INFO, and returns PACKAGE-INFO with
-a new element added that has the form (\"decoration\" . overlay)."
-  (let* ((line (- (import-cost--get "line" package-info) 1))
-         (message-string (import-cost--get-decoration-message package-info))
-         (color (import-cost--get-decoration-color (import-cost--get "size" package-info)))
-         (decoration (import-cost--create-decoration line message-string color)))
-    (push (cons "decoration" decoration) package-info)))
+  "Adds an overlay at the end of the line described by PACKAGE-INFO."
+  (let ((calc-error (import-cost--get "error" package-info)))
+    (if calc-error
+        (message "Error calculating import cost: %S" package-info)
+      (let* ((line (import-cost--get "line" package-info))
+             (message-string (import-cost--get-decoration-message package-info))
+             (color (import-cost--get-decoration-color package-info)))
+        (save-excursion
+          (goto-char (point-min))
+          (forward-line line)
+          (goto-char (line-end-position))
+          (let ((overlay (ov-create (point) (point)))
+                (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
+            (ov-set overlay 'after-string after-string)))))))
 
 (defvar import-cost--decorations-list nil
   "A list of active import size decorations across buffers.")

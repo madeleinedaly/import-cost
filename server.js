@@ -1,10 +1,13 @@
 'use strict';
+const fs = require('fs');
+
+const log = x => {
+  const line = [new Date(), JSON.stringify(x)].join(': ').concat('\n');
+  fs.appendFileSync('server.log', line);
+};
 
 const handleError = error => {
-  const {appendFileSync} = require('fs');
-  const loggedError = [new Date(), error].join(': ').concat('\n');
-  appendFileSync('errors.log', loggedError);
-  process.exit(error.code || 1);
+  log(error);
 };
 
 const isInstalled = dependency => {
@@ -43,14 +46,16 @@ const defineMethods = server => {
     }
 
     emitters[filename] = importCost(filename, contents, language);
-    emitters[filename].on('done', results => {
-      const response = results.map(result => result.error ? {
-        ...result,
-        error: result.error[0].split('\n')[1]
-      } : result);
+    emitters[filename].on('done', results => resolve(results.map(result => {
+      if (result.error) {
+        log(result);
 
-      resolve(response);
-    });
+        // don't send the entire stacktrace, otherwise Emacs will lag from rendering long lines.
+        result.error = result.error[0].split('\n')[1];
+      }
+
+      return result;
+    })));
   }));
 
   server.defineMethod('disconnect', filename => {
