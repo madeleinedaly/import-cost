@@ -1,4 +1,4 @@
-# import-cost.el
+# import-cost.el [![Build Status](https://travis-ci.org/madeleinedaly/import-cost.el.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost.el)
 
 ## About
 
