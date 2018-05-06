@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-06 16:47:32>
+;; Last-Updated: <2018-05-06 18:42:16>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -74,6 +74,28 @@
 (defconst import-cost--lang-typescript "typescript" "A parser string constant for TypeScript.")
 (defconst import-cost--lang-javascript "javascript" "A parser string constant for JavaScript.")
 
+(unless (fboundp 'alist-get)
+  (defun alist-get (key alist &optional default remove)
+    (ignore remove) ;; silence byte-compiler
+    (let ((x (assq key alist)))
+      (if x (cdr x) default))))
+
+(defun import-cost--intern-car (cell)
+  "Converts the car of CELL from a string to a symbol."
+  (cons (intern (car cell)) (cdr cell)))
+
+(defun import-cost--intern-keys (package-info)
+  "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
+  (mapcar 'import-cost--intern-car package-info))
+
+(defun import-cost--find-package-info (cell)
+  "Returns the subset of `import-cost--decorations-list' where each element contains a cons cell equal to CELL."
+  nil)
+
+(defun import-cost--bytes-to-kilobytes (bytes)
+  "Returns BYTES in kilobytes."
+  (/ bytes 1000.0))
+
 (defun import-cost--regex-from-extensions (extensions)
   "Returns a regexp that matches all EXTENSIONS."
   (concat "\\(" (mapconcat 'identity extensions "\\|") "\\)"))
@@ -84,16 +106,6 @@
         (javascript-regex (import-cost--regex-from-extensions import-cost-javascript-extensions)))
     (cond ((string-match-p typescript-regex filename) import-cost--lang-typescript)
           ((string-match-p javascript-regex filename) import-cost--lang-javascript))))
-
-(defun import-cost--bytes-to-kilobytes (bytes)
-  "Returns BYTES in kilobytes."
-  (/ bytes 1000.0))
-
-(unless (fboundp 'alist-get)
-  (defun alist-get (key alist &optional default remove)
-    (ignore remove) ;; silence byte-compiler
-    (let ((x (assq key alist)))
-      (if x (cdr x) default))))
 
 (defun import-cost--get-decoration-color (package-info)
   "Returns the color that will be used to decorate the import size overlay."
@@ -141,10 +153,6 @@ not already running."
   (when (not import-cost--epc-server)
     (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
 
-(defun import-cost--find-package-info (cell)
-  "Returns the subset of `import-cost--decorations-list' where each element contains a cons cell equal to CELL."
-  nil)
-
 ;; ;; FIXME: must handle multiples
 ;; (defun import-cost--undecorate! (filename)
 ;;   (let* ((package-info
@@ -172,15 +180,6 @@ If no other buffers are actively using this minor mode, the EPC server will be s
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun import-cost--intern-keys (package-info)
-  "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
-  (mapcar
-   (lambda (cell)
-     (cons
-      (intern (car cell))
-      (cdr cell)))
-   package-info))
-
 (defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
@@ -201,6 +200,8 @@ successful response adds import size overlays to the buffer."
   "Lighter used in the mode-line while `import-cost-mode' is active."
   :type 'string
   :group 'import-cost)
+
+;; FIXME: buffer handling
 
 ;;;###autoload
 (define-minor-mode import-cost-mode

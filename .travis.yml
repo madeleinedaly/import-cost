@@ -12,5 +12,3 @@ env:
 script:
   - emacs --version
   - cask exec ert-runner
-matrix:
-  - env: EVM_EMACS=emacs-git-snapshot-travis
