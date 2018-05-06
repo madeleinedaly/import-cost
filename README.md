@@ -6,6 +6,6 @@ An Emacs port of the [Import Cost](https://github.com/wix/import-cost/) VSCode e
 
 ## Requirements
 
-- `emacs >=25.1`
+- `emacs >=24.1`
 - `node >=8.0.0`
 - `npm >=5.0.0`

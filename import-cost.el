@@ -1,13 +1,13 @@
-;;; import-cost.el --- Minor mode providing inline displays of JavaScript import sizes
+;;; import-cost.el --- Minor mode providing inline displays of JavaScript import sizes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-04 21:48:22>
+;; Last-Updated: <2018-05-06 16:25:33>
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "25.1") (epc "0.1.1") (ov "1.0.6"))
+;; Package-Requires: ((emacs "24.1") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
 ;; URL: https://github.com/madeleinedaly/import-cost.el
 
@@ -85,28 +85,21 @@
     (cond ((string-match-p typescript-regex filename) import-cost--lang-typescript)
           ((string-match-p javascript-regex filename) import-cost--lang-javascript))))
 
-(defun import-cost--get (str-key alist)
-  "Returns the cdr of the first element in ALIST that has STR-KEY as its car."
-  (cdr
-   (seq-find
-    (lambda (pair) (string-equal str-key (car pair)))
-    alist)))
-
 (defun import-cost--bytes-to-kilobytes (bytes)
   "Returns BYTES in kilobytes."
   (/ bytes 1000.0))
 
 (defun import-cost--get-decoration-color (package-info)
   "Returns the color that will be used to decorate the import size overlay."
-  (let ((size-in-kb (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info))))
+  (let ((size-in-kb (import-cost--bytes-to-kilobytes (alist-get 'size package-info))))
     (cond ((< size-in-kb import-cost-small-package-size) import-cost-small-package-color)
           ((< size-in-kb import-cost-medium-package-size) import-cost-medium-package-color)
           (t import-cost-large-package-color))))
 
 (defun import-cost--get-decoration-message (package-info)
   "Returns the string that will be used to decorate the line described by PACKAGE-INFO."
-  (let* ((size (import-cost--bytes-to-kilobytes (import-cost--get "size" package-info)))
-         (gzip (import-cost--bytes-to-kilobytes (import-cost--get "gzip" package-info))))
+  (let* ((size (import-cost--bytes-to-kilobytes (alist-get 'size package-info)))
+         (gzip (import-cost--bytes-to-kilobytes (alist-get 'gzip package-info))))
     (cond ((<= size 0) "")
           ((eq import-cost-bundle-size-decoration 'both) (format " %dKB (gzipped: %dKB)" size gzip))
           ((eq import-cost-bundle-size-decoration 'minified) (format " %dKB" size))
@@ -114,10 +107,10 @@
 
 (defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO."
-  (let ((calc-error (import-cost--get "error" package-info)))
+  (let ((calc-error (alist-get 'error package-info)))
     (if calc-error
         (message "Error calculating import cost: %S" package-info)
-      (let* ((line (import-cost--get "line" package-info))
+      (let* ((line (alist-get 'line package-info))
              (message-string (import-cost--get-decoration-message package-info))
              (color (import-cost--get-decoration-color package-info)))
         (save-excursion
@@ -126,7 +119,9 @@
           (goto-char (line-end-position))
           (let ((overlay (ov-create (point) (point)))
                 (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
-            (ov-set overlay 'after-string after-string)))))))
+            ;; (ov-set overlay 'after-string after-string)
+            ;; (push (cons 'decoration (point)) package-info)
+            (push (cons 'decoration (ov-set overlay 'after-string after-string)) package-info)))))))
 
 (defvar import-cost--decorations-list nil
   "A list of active import size decorations across buffers.")
@@ -140,23 +135,27 @@ not already running."
   (when (not import-cost--epc-server)
     (setq import-cost--epc-server (epc:start-epc "node" '("server.js")))))
 
-(defun import-cost--undecorate! (filename)
-  (let* ((package-info
-          (seq-find
-           (lambda (alist)
-             (string-equal filename (import-cost--get "fileName" alist)))
-           import-cost--decorations-list))
-         (decoration (import-cost--get "decoration" package-info))))
-  (ov-reset decoration)
-  (delq package-info import-cost--decorations-list))
+(defun import-cost--find-package-info (cell)
+  "Returns the subset of `import-cost--decorations-list' where each element contains a cons cell equal to CELL."
+  nil)
+
+;; ;; FIXME: must handle multiples
+;; (defun import-cost--undecorate! (filename)
+;;   (let* ((package-info
+;;           (seq-find
+;;            (lambda (alist) (equal filename (alist-get 'filename alist)))
+;;            import-cost--decorations-list))
+;;          (decoration (alist-get 'decoration package-info))))
+;;   (ov-reset decoration)
+;;   (delq package-info import-cost--decorations-list))
 
 (defun import-cost--deactivate! (&optional filename)
   "Deactivates `import-cost-mode' in the current buffer.
 If no other buffers are actively using this minor mode, the EPC server will be stopped and unlinked."
   (when filename
+    ;; (import-cost--undecorate! filename)
     ;; FIXME: TypeError: CreateListFromArrayLike called on non-object
-    (epc:call-sync import-cost--epc-server 'disconnect (list filename))
-    (import-cost--undecorate! filename))
+    (epc:call-sync import-cost--epc-server 'disconnect (list filename)))
   (when (and (null import-cost--decorations-list) import-cost--epc-server)
     (epc:stop-epc import-cost--epc-server)
     (setq import-cost--epc-server nil)))
@@ -166,6 +165,15 @@ If no other buffers are actively using this minor mode, the EPC server will be s
   (save-restriction
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun import-cost--intern-keys (package-info)
+  "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
+  (mapcar
+   (lambda (cell)
+     (cons
+      (intern (car cell))
+      (cdr cell)))
+   package-info))
 
 (defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
@@ -178,7 +186,8 @@ successful response adds import size overlays to the buffer."
       (epc:call-deferred import-cost--epc-server 'calculate args)
       (deferred:nextc it
         (lambda (package-info-list)
-          (setq import-cost--decorations-list (seq-map 'import-cost--decorate package-info-list))
+          (setq import-cost--decorations-list (mapcar 'import-cost--intern-keys package-info-list))
+          ;; (setq import-cost--decorations-list (seq-map 'import-cost--decorate! package-info-list))
           (describe-variable 'import-cost--decorations-list)))
       (deferred:error it 'error))))
 

@@ -36,6 +36,24 @@ const startServer = () => {
   return epc.startServer();
 };
 
+const normalize = result => {
+  if (result.error) {
+    log(result);
+
+    // don't send the entire stacktrace, otherwise Emacs will lag from rendering long lines.
+    result.error = result.error[0].split('\n')[1];
+  }
+
+  // Emacs buffer lines are zero-indexed.
+  result.line--;
+
+  // fix property key
+  result.filename = result.fileName;
+  delete result.fileName;
+
+  return result;
+};
+
 const defineMethods = server => {
   const {importCost, cleanup} = require('import-cost');
   const emitters = {};
@@ -46,16 +64,7 @@ const defineMethods = server => {
     }
 
     emitters[filename] = importCost(filename, contents, language);
-    emitters[filename].on('done', results => resolve(results.map(result => {
-      if (result.error) {
-        log(result);
-
-        // don't send the entire stacktrace, otherwise Emacs will lag from rendering long lines.
-        result.error = result.error[0].split('\n')[1];
-      }
-
-      return result;
-    })));
+    emitters[filename].on('done', results => resolve(results.map(normalize)));
   }));
 
   server.defineMethod('disconnect', filename => {

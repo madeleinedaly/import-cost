@@ -1,9 +1,5 @@
 ;;; import-cost-test.el --- Tests for import-cost.el
 
-(ert-deftest import-cost-util/get ()
-  :tags '(utility)
-  (should (= 4096 (import-cost--get "gzip" '(("gzip" . 4096))))))
-
 (ert-deftest import-cost-lang/js ()
   :tags '(utility languages)
   (should (string-equal import-cost--lang-javascript (import-cost--language "index.js"))))
