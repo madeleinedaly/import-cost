@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-06 18:42:16>
+;; Last-Updated: <2018-05-06 19:20:56>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -70,6 +70,15 @@
   :type '(choice (const :tag "Both" both)
                  (const :tag "Minified" minified)
                  (const :tag "Gzipped" gzipped)))
+
+(defvar import-cost-cache-filename (expand-file-name user-emacs-directory "import-cost.cache")
+  "Where import size decorations get persisted across sessions.")
+
+(defvar import-cost--decorations-list nil
+  "A list of active import size decorations across buffers.")
+
+(defvar import-cost--epc-server nil
+  "A reference to the current EPC server instance.")
 
 (defconst import-cost--lang-typescript "typescript" "A parser string constant for TypeScript.")
 (defconst import-cost--lang-javascript "javascript" "A parser string constant for JavaScript.")
@@ -141,12 +150,6 @@
             ;; (push (cons 'decoration (point)) package-info)
             (push (cons 'decoration (ov-set overlay 'after-string after-string)) package-info)))))))
 
-(defvar import-cost--decorations-list nil
-  "A list of active import size decorations across buffers.")
-
-(defvar import-cost--epc-server nil
-  "A reference to the current EPC server instance.")
-
 (defun import-cost--activate! ()
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
 not already running."
@@ -202,6 +205,8 @@ successful response adds import size overlays to the buffer."
   :group 'import-cost)
 
 ;; FIXME: buffer handling
+;; FIXME: caching (cf. `import-cost-cache-filename')
+;; FIXME: use `after-save-hook'
 
 ;;;###autoload
 (define-minor-mode import-cost-mode

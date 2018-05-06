@@ -1,22 +1,23 @@
 ;;; import-cost-test.el --- Tests for import-cost.el
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-06 18:54:24>
+;; Last-Updated: <2018-05-06 19:03:30>
 
 (ert-deftest import-cost-util/intern-keys ()
-  (should (equal (import-cost--intern-keys
-                  '(("name" . "lodash/capitalize")
-                    ("line" . 2)
-                    ("string" . "require('lodash/capitalize')")
-                    ("size" . 3477)
-                    ("gzip" . 1346)
-                    ("filename" . "/Users/mdaly/Code/import-cost.el/test/buffer-file.js")))
-                 '((name . "lodash/capitalize")
-                   (line . 2)
-                   (string . "require('lodash/capitalize')")
-                   (size . 3477)
-                   (gzip . 1346)
-                   (filename . "/Users/mdaly/Code/import-cost.el/test/buffer-file.js")))))
+  (let ((actual (import-cost--intern-keys
+                 '(("name" . "lodash/capitalize")
+                   ("line" . 2)
+                   ("string" . "require('lodash/capitalize')")
+                   ("size" . 3477)
+                   ("gzip" . 1346)
+                   ("filename" . "/Users/mdaly/Code/import-cost.el/buffer-file.js"))))
+        (expected '((name . "lodash/capitalize")
+                    (line . 2)
+                    (string . "require('lodash/capitalize')")
+                    (size . 3477)
+                    (gzip . 1346)
+                    (filename . "/Users/mdaly/Code/import-cost.el/buffer-file.js")))))
+  (should (equal actual expected)))
 
 (ert-deftest import-cost-lang/js ()
   (should (string-equal import-cost--lang-javascript (import-cost--language "index.js"))))
