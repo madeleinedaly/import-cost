@@ -5,9 +5,9 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-06 16:25:33>
+;; Last-Updated: <2018-05-06 16:30:05>
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "24.1") (epc "0.1.1") (ov "1.0.6"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
 ;; URL: https://github.com/madeleinedaly/import-cost.el
 

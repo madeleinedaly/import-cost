@@ -1,6 +1,5 @@
 ;;; test-helper.el --- Helpers for import-cost-test.el
 
-(require 'seq)
 (require 'f)
 
 (defvar import-cost-test-path

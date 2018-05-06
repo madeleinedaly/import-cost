@@ -19,7 +19,7 @@
 (ert-deftest import-cost-ui/message ()
   :tags '(utility ui)
   (let* ((import-cost-bundle-size-decoration 'both)
-         (package-info '(("size" . 203890) ("gzip" . 36890)))
+         (package-info '((size . 203890) (size . 36890)))
          (decoration-message (import-cost--get-decoration-message package-info)))
     (should (string-equal " 203KB (gzipped: 36KB)" decoration-message))))
 
@@ -27,7 +27,7 @@
   :tags '(utility ui)
   (let* ((import-cost-large-package-color "#d44e40")
          (size (+ import-cost-medium-package-size (* 128 1024)))
-         (package-info (list (cons "size" size)))
+         (package-info (list (cons 'size size)))
          (decoration-color (import-cost--get-decoration-color package-info)))
     (should (string-equal import-cost-large-package-color decoration-color))))
 
