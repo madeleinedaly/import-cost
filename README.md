@@ -14,6 +14,10 @@ An Emacs port of the [Import Cost](https://github.com/wix/import-cost/) VSCode e
 
 The following variables are customizable:
 
+#### `import-cost-cache-filename`
+
+Where import size decorations get persisted across sessions. Default: `(expand-file-name "import-cost.cache" user-emacs-directory)`
+
 #### `import-cost-small-package-size`
 
 Upper size limit, in KB, that will count a package as a small package. Default: `50`

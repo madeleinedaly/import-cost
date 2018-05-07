@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-06 19:20:56>
+;; Last-Updated: <2018-05-06 22:32:30>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -71,7 +71,7 @@
                  (const :tag "Minified" minified)
                  (const :tag "Gzipped" gzipped)))
 
-(defvar import-cost-cache-filename (expand-file-name user-emacs-directory "import-cost.cache")
+(defvar import-cost-cache-filename (expand-file-name "import-cost.cache" user-emacs-directory)
   "Where import size decorations get persisted across sessions.")
 
 (defvar import-cost--decorations-list nil

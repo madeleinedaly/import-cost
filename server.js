@@ -23,7 +23,7 @@ const isInstalled = dependency => {
   }
 };
 
-const ensureDepdenencies = () => {
+const ensureDependencies = () => {
   const {dependencies} = require('./package.json');
   if (Object.keys(dependencies).every(isInstalled)) {
     return Promise.resolve();
@@ -54,7 +54,7 @@ if (require.main === module) {
 
   (async () => {
     try {
-      await ensureDepdenencies();
+      await ensureDependencies();
 
       const {importCost, cleanup} = require('import-cost');
       const {startServer} = require('elrpc');
