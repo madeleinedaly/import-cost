@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 16:06:41>
+;; Last-Updated: <2018-05-12 17:41:52>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -30,11 +30,6 @@
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost"))
-
-(defcustom import-cost-lighter " $"
-  "Lighter used in the mode-line while `import-cost-mode' is active."
-  :type 'string
-  :group 'import-cost)
 
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
@@ -88,14 +83,22 @@
   :group 'import-cost
   :type 'string)
 
+(defcustom import-cost-lighter " $"
+  "Lighter used in the mode-line while `import-cost-mode' is active."
+  :type 'string
+  :group 'import-cost)
+
 (defvar import-cost--decorations-list nil
   "A list of active import size decorations across buffers.")
 
 (defvar import-cost--epc-server nil
   "A reference to the current EPC server instance.")
 
-(defconst import-cost--lang-typescript "typescript" "A parser string constant for TypeScript.")
-(defconst import-cost--lang-javascript "javascript" "A parser string constant for JavaScript.")
+(defconst import-cost--lang-typescript "typescript"
+  "A parser string constant for TypeScript.")
+
+(defconst import-cost--lang-javascript "javascript"
+  "A parser string constant for JavaScript.")
 
 (setf (symbol-function 'import-cost--alist-get)
       (if (fboundp 'alist-get)
@@ -112,6 +115,23 @@
 (defun import-cost--intern-keys (package-info)
   "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
   (mapcar 'import-cost--intern-car package-info))
+
+(defun import-cost--filter (pred lst)
+  "Returns the list of elements from LST that pass PRED."
+  (delq nil (mapcar (lambda (elt) (and (funcall pred elt) elt)) lst)))
+
+(defconst import-cost--package-install-dir
+  (file-name-directory
+   (file-truename
+    (car
+     (or
+      ;; check the `load-path' first
+      (import-cost--filter (lambda (lisp-path) (string-match-p "import-cost" lisp-path)) load-path)
+      ;; otherwise find the buffer directory in case of `eval-buffer' etc.
+      (cl-loop for buffer being the buffers
+               for buffer-file-path = (buffer-file-name buffer)
+               when (and (stringp buffer-file-path) (string-match-p "import-cost.el" buffer-file-path))
+               collect buffer-file-path))))))
 
 (defun import-cost--find-package-info (cell)
   "Returns the subset of `import-cost--decorations-list' where each element contains a cons cell equal to CELL."

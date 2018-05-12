@@ -45,12 +45,6 @@ Or hook into your preferred JavaScript modes:
 
 The following variables are customizable (see `M-x customize-group import-cost`):
 
-#### `import-cost-lighter` : string
-
-Lighter used in the mode-line while `import-cost-mode` is active.
-
-* Default: `" $"`
-
 #### `import-cost-small-package-size` : number
 
 Upper size limit, in KB, that will count a package as a small package.
@@ -115,6 +109,12 @@ The name of the file in which import size decoration data gets persisted across 
 The path to the file where import size decoration data gets persisted across sessions.
 
 * Default: `user-emacs-directory`
+
+#### `import-cost-lighter` : string
+
+Lighter used in the mode-line while `import-cost-mode` is active.
+
+* Default: `" $"`
 
 ## License
 
