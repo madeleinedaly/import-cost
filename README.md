@@ -1,51 +1,110 @@
-# import-cost.el [![Build Status](https://travis-ci.org/madeleinedaly/import-cost.el.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost.el)
+# import-cost (pre-alpha)
+[![Build Status](https://travis-ci.org/madeleinedaly/import-cost.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost)
 
-## About
+Minor mode for displaying JavaScript module sizes inline.
 
-An Emacs port of the [Import Cost](https://github.com/wix/import-cost/) VSCode extension as a minor mode.
+This is an Emacs port of the [Import Cost](https://github.com/wix/import-cost/tree/master/packages/vscode-import-cost) plugin for Visual Studio Code.
 
 ## Requirements
 
 - `emacs >=24.4`
 - `node >=8.0.0`
-- `npm >=5.0.0`
+
+## Usage
+
+You can enable `import-cost-mode` for the current buffer interactively with `M-x import-cost-mode`.
+
+Or hook into your preferred JavaScript modes:
+
+``` emacs-lisp
+(add-hook 'js2-mode-hook #'import-cost-mode)
+(add-hook 'rjsx-mode-hook #'import-cost-mode)
+```
 
 ## Configuration
 
-The following variables are customizable:
+The following variables are customizable (see `M-x customize-group import-cost`):
 
-#### `import-cost-cache-filename`
+### UI options
 
-Where import size decorations get persisted across sessions. Default: `(expand-file-name "import-cost.cache" user-emacs-directory)`
+#### `import-cost-small-package-size` : number
 
-#### `import-cost-small-package-size`
+Upper size limit, in KB, that will count a package as a small package.
+* Default: `50`
 
-Upper size limit, in KB, that will count a package as a small package. Default: `50`
+#### `import-cost-medium-package-size` : number
 
-#### `import-cost-medium-package-size`
+Upper size limit, in KB, that will count a package as a medium package. Any package size above this limit will be considered large.
 
-Upper size limit, in KB, that will count a package as a medium package. Any package size above this limit will be considered large. Default: `100`
+* Default: `100`
 
-#### `import-cost-small-package-color`
+#### `import-cost-small-package-color` : color|face
 
-Decoration color for small packages. Default: `"#7cc36e"`
+Decoration color for small packages.
 
-#### `import-cost-medium-package-color`
+* Default: `"#7cc36e"`
 
-Decoration color for medium packages. Default: `"#7cc36e"`
+#### `import-cost-medium-package-color` : color|face
 
-#### `import-cost-large-package-color`
+Decoration color for medium packages.
 
-Decoration color for large packages. Default: `"#d44e40"`
+* Default: `"#7cc36e"`
 
-#### `import-cost-typescript-extensions`
+#### `import-cost-large-package-color` : color|face
 
-File extensions to be parsed by the TypeScript parser. Default: `'("\\.tsx?$")`
+Decoration color for large packages.
 
-#### `import-cost-javascript-extensions`
+* Default: `"#d44e40"`
 
-File extensions to be parsed by the JavaScript parser. Default: `'("\\.jsx?$")`
+#### `import-cost-typescript-extensions` : list (regexp)
 
-#### `import-cost-bundle-size-decoration`
+File extensions to be parsed by the TypeScript parser.
 
-Which bundle size to display. Possible values: `'both`, `'minified`, and `'gzipped`. Default: `'both`
+* Default: `'("\\.tsx?$")`
+
+#### `import-cost-javascript-extensions` : list (regexp)
+
+File extensions to be parsed by the JavaScript parser.
+
+* Default: `'("\\.jsx?$")`
+
+#### `import-cost-bundle-size-decoration` : symbol
+
+Which bundle size to display.
+
+* Default: `'both`
+
+* Possible values:
+  * `'both`
+  * `'minified`
+  * `'gzipped`
+
+### Environment settings
+
+#### `import-cost-node-executable` : string
+
+The path or name of the `node` binary that will be used to run this package's Node.js subprocess.
+
+* Default: `node`
+
+#### `import-cost-npm-executable` : string
+
+The path or name of the `npm` binary that will be used to install this package's JavaScript dependencies.
+
+* Default: `npm`
+
+#### `import-cost-cache-filename` : string
+
+The name of the file in which import size decoration data gets persisted across sessions.
+
+* Default: `"import-cost.cache"`
+
+#### `import-cost-cache-filepath` : string
+
+The path to the file where import size decoration data gets persisted across sessions.
+
+* Default: `user-emacs-directory`
+
+## License
+
+MIT

@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-06 22:32:30>
+;; Last-Updated: <2018-05-11 19:46:40>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -32,37 +32,37 @@
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
   :group 'import-cost
-  :type 'integer)
+  :type 'number)
 
 (defcustom import-cost-medium-package-size 100
   "Upper size limit, in KB, that will count a package as a medium package."
   :group 'import-cost
-  :type 'integer)
+  :type 'number)
 
 (defcustom import-cost-small-package-color "#7cc36e"
   "Decoration color for small packages."
   :group 'import-cost
-  :type 'color)
+  :type '(choice color face))
 
 (defcustom import-cost-medium-package-color "#7cc36e"
   "Decoration color for medium packages."
   :group 'import-cost
-  :type 'color)
+  :type '(choice color face))
 
 (defcustom import-cost-large-package-color "#d44e40"
   "Decoration color for large packages."
   :group 'import-cost
-  :type 'color)
+  :type '(choice color face))
 
 (defcustom import-cost-typescript-extensions '("\\.tsx?$")
   "File extensions to be parsed by the TypeScript parser."
   :group 'import-cost
-  :type '(repeat string))
+  :type '(repeat regexp))
 
 (defcustom import-cost-javascript-extensions '("\\.jsx?$")
   "File extensions to be parsed by the JavaScript parser."
   :group 'import-cost
-  :type '(repeat string))
+  :type '(repeat regexp))
 
 (defcustom import-cost-bundle-size-decoration 'both
   "Which bundle size to display."
