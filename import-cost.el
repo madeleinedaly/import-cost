@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-11 19:46:40>
+;; Last-Updated: <2018-05-12 10:51:49>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -120,15 +120,15 @@
 
 (defun import-cost--get-decoration-color (package-info)
   "Returns the color that will be used to decorate the import size overlay."
-  (let ((size-in-kb (import-cost--bytes-to-kilobytes (alist-get 'size package-info))))
+  (let ((size-in-kb (import-cost--bytes-to-kilobytes (import-cost--alist-get 'size package-info))))
     (cond ((< size-in-kb import-cost-small-package-size) import-cost-small-package-color)
           ((< size-in-kb import-cost-medium-package-size) import-cost-medium-package-color)
           (t import-cost-large-package-color))))
 
 (defun import-cost--get-decoration-message (package-info)
   "Returns the string that will be used to decorate the line described by PACKAGE-INFO."
-  (let* ((size (import-cost--bytes-to-kilobytes (alist-get 'size package-info)))
-         (gzip (import-cost--bytes-to-kilobytes (alist-get 'gzip package-info))))
+  (let* ((size (import-cost--bytes-to-kilobytes (import-cost--alist-get 'size package-info)))
+         (gzip (import-cost--bytes-to-kilobytes (import-cost--alist-get 'gzip package-info))))
     (cond ((<= size 0) "")
           ((eq import-cost-bundle-size-decoration 'both) (format " %dKB (gzipped: %dKB)" size gzip))
           ((eq import-cost-bundle-size-decoration 'minified) (format " %dKB" size))
@@ -136,10 +136,10 @@
 
 (defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO."
-  (let ((calc-error (alist-get 'error package-info)))
+  (let ((calc-error (import-cost--alist-get 'error package-info)))
     (if calc-error
         (message "Error calculating import cost: %S" package-info)
-      (let* ((line (alist-get 'line package-info))
+      (let* ((line (import-cost--alist-get 'line package-info))
              (message-string (import-cost--get-decoration-message package-info))
              (color (import-cost--get-decoration-color package-info)))
         (save-excursion
@@ -162,9 +162,9 @@ not already running."
 ;; (defun import-cost--undecorate! (filename)
 ;;   (let* ((package-info
 ;;           (seq-find
-;;            (lambda (alist) (equal filename (alist-get 'filename alist)))
+;;            (lambda (alist) (equal filename (import-cost--alist-get 'filename alist)))
 ;;            import-cost--decorations-list))
-;;          (decoration (alist-get 'decoration package-info))))
+;;          (decoration (import-cost--alist-get 'decoration package-info))))
 ;;   (ov-reset decoration)
 ;;   (delq package-info import-cost--decorations-list))
 

@@ -1,7 +1,7 @@
 ;;; import-cost-test.el --- Tests for import-cost.el
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-06 22:13:32>
+;; Last-Updated: <2018-05-12 10:50:12>
 
 (ert-deftest import-cost-util/intern-keys ()
   (should
@@ -12,13 +12,13 @@
        ("string" . "require('lodash/capitalize')")
        ("size" . 3477)
        ("gzip" . 1346)
-       ("filename" . "/Users/mdaly/Code/import-cost.el/buffer-file.js")))
+       ("filename" . "/Users/mdaly/Code/import-cost/buffer-file.js")))
     '((name . "lodash/capitalize")
       (line . 2)
       (string . "require('lodash/capitalize')")
       (size . 3477)
       (gzip . 1346)
-      (filename . "/Users/mdaly/Code/import-cost.el/buffer-file.js")))))
+      (filename . "/Users/mdaly/Code/import-cost/buffer-file.js")))))
 
 (ert-deftest import-cost-lang/js ()
   (should (equal import-cost--lang-javascript (import-cost--language "index.js"))))
