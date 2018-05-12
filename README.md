@@ -49,7 +49,7 @@ The following variables are customizable (see `M-x customize-group import-cost`)
 
 Lighter used in the mode-line while `import-cost-mode` is active.
 
-Default: `" $"`
+* Default: `" $"`
 
 #### `import-cost-small-package-size` : number
 
