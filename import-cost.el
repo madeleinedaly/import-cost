@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 15:09:32>
+;; Last-Updated: <2018-05-12 15:19:25>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -29,7 +29,7 @@
   "Minor mode for displaying JavaScript module sizes inline."
   :group 'tools
   :prefix "import-cost-"
-  :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost.el"))
+  :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost"))
 
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
