@@ -85,13 +85,13 @@ Which bundle size to display.
 
 The path or name of the `node` binary that will be used to run this package's Node.js subprocess.
 
-* Default: `node`
+* Default: `"node"`
 
 #### `import-cost-npm-executable` : string
 
 The path or name of the `npm` binary that will be used to install this package's JavaScript dependencies.
 
-* Default: `npm`
+* Default: `"npm"`
 
 #### `import-cost-cache-filename` : string
 
