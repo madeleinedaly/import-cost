@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 15:19:25>
+;; Last-Updated: <2018-05-12 15:32:27>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -214,10 +214,6 @@ successful response adds import size overlays to the buffer."
   "Lighter used in the mode-line while `import-cost-mode' is active."
   :type 'string
   :group 'import-cost)
-
-;; FIXME: buffer handling
-;; FIXME: caching (cf. `import-cost-cache-filename')
-;; FIXME: use `after-save-hook'
 
 ;;;###autoload
 (define-minor-mode import-cost-mode
