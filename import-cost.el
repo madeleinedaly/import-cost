@@ -1,11 +1,11 @@
-;;; import-cost --- Minor mode for displaying JavaScript module sizes inline. -*- lexical-binding: t; -*-
+;;; import-cost.el --- Minor mode for displaying JavaScript module sizes inline. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 15:06:09>
+;; Last-Updated: <2018-05-12 15:09:32>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
