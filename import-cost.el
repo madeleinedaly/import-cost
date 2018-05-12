@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 17:41:52>
+;; Last-Updated: <2018-05-12 19:36:11>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -108,6 +108,28 @@
           (let ((x (assq key alist)))
             (if x (cdr x) default)))))
 
+(defun import-cost--filter (pred lst)
+  "Returns the list of elements from LST that pass PRED."
+  (delq nil (mapcar (lambda (elt) (and (funcall pred elt) elt)) lst)))
+
+(defconst import-cost--package-directory
+  (file-name-directory
+   (file-truename
+    (car
+     (or
+      ;; check the `load-path' first
+      (import-cost--filter
+       (lambda (path)
+         (string-match-p "import-cost" path))
+       load-path)
+      ;; otherwise find the buffer directory in case of `eval-buffer' etc.
+      (cl-loop for buffer being the buffers
+               for buffer-file-path = (buffer-file-name buffer)
+               when (and (stringp buffer-file-path)
+                         (string-match-p "import-cost.el" buffer-file-path))
+               collect buffer-file-path)))))
+  "The path to the import-cost package directory.")
+
 (defun import-cost--intern-car (cell)
   "Converts the car of CELL from a string to a symbol."
   (cons (intern (car cell)) (cdr cell)))
@@ -116,26 +138,11 @@
   "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
   (mapcar 'import-cost--intern-car package-info))
 
-(defun import-cost--filter (pred lst)
-  "Returns the list of elements from LST that pass PRED."
-  (delq nil (mapcar (lambda (elt) (and (funcall pred elt) elt)) lst)))
-
-(defconst import-cost--package-install-dir
-  (file-name-directory
-   (file-truename
-    (car
-     (or
-      ;; check the `load-path' first
-      (import-cost--filter (lambda (lisp-path) (string-match-p "import-cost" lisp-path)) load-path)
-      ;; otherwise find the buffer directory in case of `eval-buffer' etc.
-      (cl-loop for buffer being the buffers
-               for buffer-file-path = (buffer-file-name buffer)
-               when (and (stringp buffer-file-path) (string-match-p "import-cost.el" buffer-file-path))
-               collect buffer-file-path))))))
-
-(defun import-cost--find-package-info (cell)
-  "Returns the subset of `import-cost--decorations-list' where each element contains a cons cell equal to CELL."
-  nil)
+(defun import-cost--find-package-infos (cell)
+  "Returns a list elements from `import-cost--decorations-list' that each contain a cons cell equal to CELL."
+  (cl-loop for package-info in import-cost--decorations-list
+           when (member cell package-info)
+           collect package-info))
 
 (defun import-cost--bytes-to-kilobytes (bytes)
   "Returns BYTES in kilobytes."
@@ -219,6 +226,19 @@ If no other buffers are actively using this minor mode, the EPC server will be s
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
 
+(defun import-cost--is-valid (package-info)
+  "Returns t if PACKAGE-INFO contains no errors, nil otherwise."
+  (not (assq 'error package-info)))
+
+(defun import-cost--handle-epc-server-response (package-info-list)
+  "Creates new decorations according to the PACKAGE-INFO-LIST returned from the EPC server."
+  (setq import-cost--decorations-list
+        (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
+               (valid-package-infos (import-cost--filter #'import-cost--is-valid package-infos)))
+          (mapcar #'import-cost--decorate! valid-package-infos)))
+  ;; for debugging:
+  (describe-variable 'import-cost--decorations-list))
+
 (defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
@@ -228,11 +248,7 @@ successful response adds import size overlays to the buffer."
          (args (list filename contents language)))
     (deferred:$
       (epc:call-deferred import-cost--epc-server 'calculate args)
-      (deferred:nextc it
-        (lambda (package-info-list)
-          (setq import-cost--decorations-list (mapcar 'import-cost--intern-keys package-info-list))
-          ;; (setq import-cost--decorations-list (seq-map 'import-cost--decorate! package-info-list))
-          (describe-variable 'import-cost--decorations-list)))
+      (deferred:nextc it #'import-cost--handle-epc-server-response)
       (deferred:error it 'error))))
 
 ;;;###autoload
