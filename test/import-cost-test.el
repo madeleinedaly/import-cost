@@ -1,7 +1,20 @@
 ;;; import-cost-test.el --- Tests for import-cost
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-12 15:02:59>
+;; Last-Updated: <2018-05-12 19:50:02>
+
+(ert-deftest import-cost-util/filter ()
+  (should (equal (import-cost--filter #'cl-evenp '(1 2 3 4 5 6 7 8 9 10)) '(2 4 6 8 10))))
+
+(ert-deftest import-cost-util/is-valid ()
+  (should (equal nil (import-cost--is-valid
+                      '((name . "import-cost")
+                        (line . 3)
+                        (string . "require('import-cost')")
+                        (size . 0)
+                        (gzip . 0)
+                        (error . "uh-oh spaghetti-o")
+                        (filename . "/Users/mdaly/Code/import-cost/buffer-file.js"))))))
 
 (ert-deftest import-cost-util/intern-keys ()
   (should
