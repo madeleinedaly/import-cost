@@ -1,15 +1,15 @@
-;;; import-cost.el --- Minor mode providing inline displays of JavaScript import sizes -*- lexical-binding: t; -*-
+;;; import-cost --- Minor mode providing inline displays of JavaScript import sizes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 10:51:49>
+;; Last-Updated: <2018-05-12 15:02:44>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
-;; URL: https://github.com/madeleinedaly/import-cost.el
+;; URL: https://github.com/madeleinedaly/import-cost
 
 ;;; Commentary:
 
@@ -71,8 +71,15 @@
                  (const :tag "Minified" minified)
                  (const :tag "Gzipped" gzipped)))
 
-(defvar import-cost-cache-filename (expand-file-name "import-cost.cache" user-emacs-directory)
-  "Where import size decorations get persisted across sessions.")
+(defcustom import-cost-cache-path user-emacs-directory
+  "The path to the file where import size decoration data gets persisted across sessions."
+  :group 'import-cost
+  :type 'string)
+
+(defcustom import-cost-cache-filename "import-cost.cache"
+  "The name of the file in which import size decoration data gets persisted across sessions."
+  :group 'import-cost
+  :type 'string)
 
 (defvar import-cost--decorations-list nil
   "A list of active import size decorations across buffers.")

@@ -1,7 +1,7 @@
-;;; import-cost-test.el --- Tests for import-cost.el
+;;; import-cost-test.el --- Tests for import-cost
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-12 10:50:12>
+;; Last-Updated: <2018-05-12 15:02:59>
 
 (ert-deftest import-cost-util/intern-keys ()
   (should
