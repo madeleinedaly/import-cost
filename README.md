@@ -25,8 +25,6 @@ Or hook into your preferred JavaScript modes:
 
 The following variables are customizable (see `M-x customize-group import-cost`):
 
-### UI options
-
 #### `import-cost-small-package-size` : number
 
 Upper size limit, in KB, that will count a package as a small package.
@@ -78,20 +76,6 @@ Which bundle size to display.
   * `'both`
   * `'minified`
   * `'gzipped`
-
-### Environment settings
-
-#### `import-cost-node-executable` : string
-
-The path or name of the `node` binary that will be used to run this package's Node.js subprocess.
-
-* Default: `"node"`
-
-#### `import-cost-npm-executable` : string
-
-The path or name of the `npm` binary that will be used to install this package's JavaScript dependencies.
-
-* Default: `"npm"`
 
 #### `import-cost-cache-filename` : string
 
