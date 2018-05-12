@@ -1,5 +1,4 @@
-# import-cost (pre-alpha)
-[![Build Status](https://travis-ci.org/madeleinedaly/import-cost.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost)
+# import-cost (pre-alpha) [![Build Status](https://travis-ci.org/madeleinedaly/import-cost.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost)
 
 Minor mode for displaying JavaScript module sizes inline.
 
@@ -9,6 +8,27 @@ This is an Emacs port of the [Import Cost](https://github.com/wix/import-cost/tr
 
 - `emacs >=24.4`
 - `node >=8.0.0`
+
+## Installation
+
+### Manually
+
+First clone this project:
+
+``` shellsession
+$ git clone git@github.com:madeleinedaly/import-cost.git
+```
+
+Then add something like this to your Emacs config:
+
+``` emacs-lisp
+(add-to-list 'load-path "path/to/import-cost.el")
+(require 'import-cost)
+
+;; you can access config options once the package has loaded:
+(with-eval-after-load 'import-cost
+  (setq import-cost-bundle-size-decoration 'gzipped))
+```
 
 ## Usage
 
@@ -36,19 +56,19 @@ Upper size limit, in KB, that will count a package as a medium package. Any pack
 
 * Default: `100`
 
-#### `import-cost-small-package-color` : color|face
+#### `import-cost-small-package-color` : color | face
 
 Decoration color for small packages.
 
 * Default: `"#7cc36e"`
 
-#### `import-cost-medium-package-color` : color|face
+#### `import-cost-medium-package-color` : color | face
 
 Decoration color for medium packages.
 
 * Default: `"#7cc36e"`
 
-#### `import-cost-large-package-color` : color|face
+#### `import-cost-large-package-color` : color | face
 
 Decoration color for large packages.
 
