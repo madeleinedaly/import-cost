@@ -45,9 +45,16 @@ Or hook into your preferred JavaScript modes:
 
 The following variables are customizable (see `M-x customize-group import-cost`):
 
+#### `import-cost-lighter` : string
+
+Lighter used in the mode-line while `import-cost-mode` is active.
+
+Default: `" $"`
+
 #### `import-cost-small-package-size` : number
 
 Upper size limit, in KB, that will count a package as a small package.
+
 * Default: `50`
 
 #### `import-cost-medium-package-size` : number

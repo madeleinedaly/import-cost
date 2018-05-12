@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 15:32:27>
+;; Last-Updated: <2018-05-12 16:06:41>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -30,6 +30,11 @@
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost"))
+
+(defcustom import-cost-lighter " $"
+  "Lighter used in the mode-line while `import-cost-mode' is active."
+  :type 'string
+  :group 'import-cost)
 
 (defcustom import-cost-small-package-size 50
   "Upper size limit, in KB, that will count a package as a small package."
@@ -209,11 +214,6 @@ successful response adds import size overlays to the buffer."
           ;; (setq import-cost--decorations-list (seq-map 'import-cost--decorate! package-info-list))
           (describe-variable 'import-cost--decorations-list)))
       (deferred:error it 'error))))
-
-(defcustom import-cost-lighter " $"
-  "Lighter used in the mode-line while `import-cost-mode' is active."
-  :type 'string
-  :group 'import-cost)
 
 ;;;###autoload
 (define-minor-mode import-cost-mode
