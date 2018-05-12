@@ -83,11 +83,13 @@
 (defconst import-cost--lang-typescript "typescript" "A parser string constant for TypeScript.")
 (defconst import-cost--lang-javascript "javascript" "A parser string constant for JavaScript.")
 
-(unless (fboundp 'alist-get)
-  (defun alist-get (key alist &optional default remove)
-    (ignore remove) ;; silence byte-compiler
-    (let ((x (assq key alist)))
-      (if x (cdr x) default))))
+(setf (symbol-function 'import-cost--alist-get)
+      (if (fboundp 'alist-get)
+          'alist-get
+        (lambda (key alist &optional default remove)
+          (ignore remove) ;; silence byte-compiler
+          (let ((x (assq key alist)))
+            (if x (cdr x) default)))))
 
 (defun import-cost--intern-car (cell)
   "Converts the car of CELL from a string to a symbol."
