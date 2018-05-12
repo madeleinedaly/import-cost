@@ -1,11 +1,11 @@
-;;; import-cost --- Minor mode providing inline displays of JavaScript import sizes -*- lexical-binding: t; -*-
+;;; import-cost --- Minor mode for displaying JavaScript module sizes inline. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018 Madeleine Daly
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 15:02:44>
+;; Last-Updated: <2018-05-12 15:06:09>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -13,7 +13,9 @@
 
 ;;; Commentary:
 
-;; Minor mode providing inline displays of JavaScript import sizes.
+;; Minor mode for displaying JavaScript module sizes inline.
+;;
+;; This is an Emacs port of the Import Cost plugin for Visual Studio Code.
 
 ;;; Code:
 
@@ -24,7 +26,7 @@
   "The import-cost package version.")
 
 (defgroup import-cost nil
-  "Minor mode providing inline displays of JavaScript import sizes."
+  "Minor mode for displaying JavaScript module sizes inline."
   :group 'tools
   :prefix "import-cost-"
   :link '(url-link :tag "Repository" "https://github.com/madeleinedaly/import-cost.el"))
@@ -219,7 +221,7 @@ successful response adds import size overlays to the buffer."
 
 ;;;###autoload
 (define-minor-mode import-cost-mode
-  "Minor mode providing inline displays of JavaScript import sizes."
+  "Minor mode for displaying JavaScript module sizes inline."
   :lighter import-cost-lighter
   :group 'import-cost)
 
