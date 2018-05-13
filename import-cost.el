@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 20:23:03>
+;; Last-Updated: <2018-05-12 21:30:48>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -177,21 +177,22 @@
 
 (defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO."
-  (let ((calc-error (import-cost--alist-get 'error package-info)))
-    (if calc-error
+  (let ((err (import-cost--alist-get 'error package-info)))
+    (if err
         (message "Error calculating import cost: %S" package-info)
       (let* ((line (import-cost--alist-get 'line package-info))
              (message-string (import-cost--get-decoration-message package-info))
-             (color (import-cost--get-decoration-color package-info)))
-        (save-excursion
-          (goto-char (point-min))
-          (forward-line line)
-          (goto-char (line-end-position))
-          (let ((overlay (ov-create (point) (point)))
-                (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color))))
-            ;; (ov-set overlay 'after-string after-string)
-            ;; (push (cons 'decoration (point)) package-info)
-            (push (cons 'decoration (ov-set overlay 'after-string after-string)) package-info)))))))
+             (color (import-cost--get-decoration-color package-info))
+             (buf (import-cost--alist-get 'buffer package-info)))
+        (with-current-buffer (get-buffer buf)
+          (save-excursion
+            (goto-char (point-min))
+            (forward-line line)
+            (goto-char (line-end-position))
+            (let* ((overlay (ov-create (point) (point)))
+                   (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color)))
+                   (decoration (ov-set overlay 'after-string after-string)))
+              (push (cons 'decoration decoration) package-info))))))))
 
 (defun import-cost--activate! ()
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
@@ -230,25 +231,27 @@ If no other buffers are actively using this minor mode, the EPC server will be s
   "Returns t if PACKAGE-INFO contains no errors, nil otherwise."
   (not (assq 'error package-info)))
 
-(defun import-cost--handle-epc-server-response (package-info-list)
-  "Creates new decorations according to the PACKAGE-INFO-LIST returned from the EPC server."
-  (setq import-cost--decorations-list
-        (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
-               (valid-package-infos (import-cost--filter #'import-cost--is-valid package-infos)))
-          (mapcar #'import-cost--decorate! valid-package-infos)))
-  ;; for debugging:
-  (describe-variable 'import-cost--decorations-list))
-
 (defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
   (let* ((filename (buffer-file-name))
          (contents (import-cost--buffer-string-no-properties))
          (language (import-cost--language filename))
-         (args (list filename contents language)))
+         (args (list filename contents language))
+         (buf (current-buffer)))
     (deferred:$
       (epc:call-deferred import-cost--epc-server 'calculate args)
-      (deferred:nextc it #'import-cost--handle-epc-server-response)
+      (deferred:nextc it
+        (lambda (package-info-list)
+          (setq import-cost--decorations-list
+                (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
+                       (valid-package-infos (import-cost--filter #'import-cost--is-valid package-infos))
+                       (buffer-package-infos (mapcar
+                                              (lambda (package-info) (push (cons 'buffer buf) package-info))
+                                              valid-package-infos)))
+                  (mapcar #'import-cost--decorate! buffer-package-infos)))
+          ;; for debugging:
+          (describe-variable 'import-cost--decorations-list)))
       (deferred:error it 'error))))
 
 ;;;###autoload
