@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 21:44:40>
+;; Last-Updated: <2018-05-12 22:41:10>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -229,7 +229,9 @@ If no other buffers are actively using this minor mode, the EPC server will be s
 
 (defun import-cost--is-valid (package-info)
   "Returns t if PACKAGE-INFO contains no errors, nil otherwise."
-  (not (assq 'error package-info)))
+  (not (or (assq 'error package-info)
+           (equal 0 (import-cost--alist-get 'size package-info))
+           (equal 0 (import-cost--alist-get 'gzip package-info)))))
 
 (defun import-cost--merge-buffer (buf package-info-list)
   "Add a new cons cell of the form (buffer . BUF) to each alist in PACKAGE-INFO-LIST."
