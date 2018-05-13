@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 22:42:19>
+;; Last-Updated: <2018-05-13 19:49:15>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -104,7 +104,7 @@
       (if (fboundp 'alist-get)
           'alist-get
         (lambda (key alist &optional default remove)
-          (ignore remove) ;; silence byte-compiler
+          (ignore remove) ; silence byte compiler
           (let ((x (assq key alist)))
             (if x (cdr x) default)))))
 
@@ -138,26 +138,35 @@
   "Converts the key of each cons cell in PACKAGE-INFO from a string to a symbol."
   (mapcar 'import-cost--intern-car package-info))
 
-(defun import-cost--find-package-infos (cell)
-  "Returns a list elements from `import-cost--decorations-list' that each contain a cons cell equal to CELL."
+(defun import-cost--members-p (cells alist)
+  "Returns t if all CELLS are members of ALIST, nil otherwise."
+  (cl-loop for cell in cells
+           collect (member cell alist) into results
+           return (> (length (delq nil results)) 0)))
+
+(defun import-cost--find-package-infos (cells)
+  "Returns a list elements from `import-cost--decorations-list' that each contain cons cells equal to CELLS."
   (cl-loop for package-info in import-cost--decorations-list
-           when (member cell package-info)
+           when (import-cost--members-p cells package-info)
            collect package-info))
 
 (defun import-cost--bytes-to-kilobytes (bytes)
   "Returns BYTES in kilobytes."
   (/ bytes 1000.0))
 
-(defun import-cost--regex-from-extensions (extensions)
+(defun import-cost--or-regexp-from-strings (strings)
+  (mapconcat 'identity strings "\\|"))
+
+(defun import-cost--regexp-from-extensions (extensions)
   "Returns a regexp that matches all EXTENSIONS."
-  (concat "\\(" (mapconcat 'identity extensions "\\|") "\\)"))
+  (concat "\\(" (import-cost--or-regexp-from-strings extensions) "\\)"))
 
 (defun import-cost--language (filename)
   "Returns the language that the parser should use when analyzing the buffer contents of FILENAME."
-  (let ((typescript-regex (import-cost--regex-from-extensions import-cost-typescript-extensions))
-        (javascript-regex (import-cost--regex-from-extensions import-cost-javascript-extensions)))
-    (cond ((string-match-p typescript-regex filename) import-cost--lang-typescript)
-          ((string-match-p javascript-regex filename) import-cost--lang-javascript))))
+  (let ((typescript-regexp (import-cost--regexp-from-extensions import-cost-typescript-extensions))
+        (javascript-regexp (import-cost--regexp-from-extensions import-cost-javascript-extensions)))
+    (cond ((string-match-p typescript-regexp filename) import-cost--lang-typescript)
+          ((string-match-p javascript-regexp filename) import-cost--lang-javascript))))
 
 (defun import-cost--get-decoration-color (package-info)
   "Returns the color that will be used to decorate the import size overlay."
@@ -177,22 +186,19 @@
 
 (defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO."
-  (let ((err (import-cost--alist-get 'error package-info)))
-    (if err
-        (message "Error calculating import cost: %S" package-info)
-      (let* ((line (import-cost--alist-get 'line package-info))
-             (message-string (import-cost--get-decoration-message package-info))
-             (color (import-cost--get-decoration-color package-info))
-             (buf (import-cost--alist-get 'buffer package-info)))
-        (with-current-buffer (get-buffer buf)
-          (save-excursion
-            (goto-char (point-min))
-            (forward-line line)
-            (goto-char (line-end-position))
-            (let* ((overlay (ov-create (point) (point)))
-                   (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color)))
-                   (decoration (ov-set overlay 'after-string after-string)))
-              (push (cons 'decoration decoration) package-info))))))))
+  (let* ((line (import-cost--alist-get 'line package-info))
+         (message-string (import-cost--get-decoration-message package-info))
+         (color (import-cost--get-decoration-color package-info))
+         (buf (import-cost--alist-get 'buffer package-info)))
+    (with-current-buffer (get-buffer buf)
+      (save-excursion
+        (goto-char (point-min))
+        (forward-line line)
+        (goto-char (line-end-position))
+        (let* ((overlay (ov-create (point) (point)))
+               (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color)))
+               (decoration (ov-set overlay 'after-string after-string)))
+          (push (cons 'decoration decoration) package-info))))))
 
 (defun import-cost--activate! ()
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
@@ -227,17 +233,21 @@ If no other buffers are actively using this minor mode, the EPC server will be s
     (widen)
     (buffer-substring-no-properties (point-min) (point-max))))
 
-(defun import-cost--is-valid (package-info)
+(defun import-cost--valid-p (package-info)
   "Returns t if PACKAGE-INFO contains no errors, nil otherwise."
-  (not (or (assq 'error package-info)
-           (equal 0 (import-cost--alist-get 'size package-info))
-           (equal 0 (import-cost--alist-get 'gzip package-info)))))
+  (if (not (or (assq 'error package-info)
+               (equal 0 (import-cost--alist-get 'size package-info))
+               (equal 0 (import-cost--alist-get 'gzip package-info))))
+      t
+    (let ((package-name (import-cost--alist-get 'name package-info)))
+      (message "Error calculating import cost for %S: %S" package-name package-info)
+      nil)))
 
 (defun import-cost--merge-buffer (buf package-info-list)
   "Add a new cons cell of the form (buffer . BUF) to each alist in PACKAGE-INFO-LIST."
   (mapcar (lambda (package-info) (push (cons 'buffer buf) package-info)) package-info-list))
 
-(defun import-cost--process-active-buffer! (&rest _)
+(defun import-cost--process-active-buffer! ()
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
   (let* ((filename (buffer-file-name))
@@ -251,7 +261,7 @@ successful response adds import size overlays to the buffer."
         (lambda (package-info-list)
           (setq import-cost--decorations-list
                 (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
-                       (valid-package-infos (import-cost--filter #'import-cost--is-valid package-infos))
+                       (valid-package-infos (import-cost--filter #'import-cost--valid-p package-infos))
                        (buffer-package-infos (import-cost--merge-buffer buf valid-package-infos)))
                   (with-current-buffer (get-buffer buf)
                     (ov-clear (point-min) (point-max)))
@@ -260,11 +270,39 @@ successful response adds import size overlays to the buffer."
           (describe-variable 'import-cost--decorations-list)))
       (deferred:error it 'error))))
 
+(defun import-cost--line-numbers-in-region (beg end)
+  "Returns a list of the line numbers that are in the region between BEG and END."
+  (save-excursion
+    (goto-char beg)
+    (let ((line-numbers '()))
+      (while (not (= end (point)))
+        (push (line-number-at-pos) line-numbers)
+        (forward-line 1))
+      line-numbers)))
+
+(defconst import-cost--javascript-module-loader-keywords
+  (import-cost--or-regexp-from-strings '("import" "require"))
+  "A regexp to search for when naively checking the modified region for relevant changes on after-change.
+AMD loaders like curl, define, etc. and are not supported.")
+
+(defun import-cost-after-change-function (beg end len)
+  (let ((modified-lines (if (and (= beg end) (= len 1))
+                            (let ((line-deleted (save-excursion
+                                                  (goto-char beg)
+                                                  (line-number-at-pos))))
+                              (list line-deleted))
+                          (import-cost--line-numbers-in-region beg end))))
+    (message "beg: %d, end: %d, len: %d" beg end len)
+    (message "modified lines: %S" modified-lines)))
+
 ;;;###autoload
 (define-minor-mode import-cost-mode
   "Minor mode for displaying JavaScript module sizes inline."
   :lighter import-cost-lighter
-  :group 'import-cost)
+  :group 'import-cost
+  (if import-cost-mode
+      (add-hook 'after-change-functions #'import-cost-after-change-function)
+    (remove-hook 'after-change-functions #'import-cost-after-change-function)))
 
 (provide 'import-cost)
 

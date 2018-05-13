@@ -1,4 +1,6 @@
-# import-cost (pre-alpha) [![Build Status](https://travis-ci.org/madeleinedaly/import-cost.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost)
+# import-cost [![Build Status](https://travis-ci.org/madeleinedaly/import-cost.svg?branch=master)](https://travis-ci.org/madeleinedaly/import-cost)
+
+** &#42;&#42; PRE-ALPHA &#42;&#42; **
 
 Minor mode for displaying JavaScript module sizes inline.
 
