@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 21:30:48>
+;; Last-Updated: <2018-05-12 21:44:40>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -231,6 +231,10 @@ If no other buffers are actively using this minor mode, the EPC server will be s
   "Returns t if PACKAGE-INFO contains no errors, nil otherwise."
   (not (assq 'error package-info)))
 
+(defun import-cost--merge-buffer (buf package-info-list)
+  "Add a new cons cell of the form (buffer . BUF) to each alist in PACKAGE-INFO-LIST."
+  (mapcar (lambda (package-info) (push (cons 'buffer buf) package-info)) package-info-list))
+
 (defun import-cost--process-active-buffer! (&rest _)
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
@@ -246,9 +250,7 @@ successful response adds import size overlays to the buffer."
           (setq import-cost--decorations-list
                 (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
                        (valid-package-infos (import-cost--filter #'import-cost--is-valid package-infos))
-                       (buffer-package-infos (mapcar
-                                              (lambda (package-info) (push (cons 'buffer buf) package-info))
-                                              valid-package-infos)))
+                       (buffer-package-infos (import-cost--merge-buffer buf valid-package-infos)))
                   (mapcar #'import-cost--decorate! buffer-package-infos)))
           ;; for debugging:
           (describe-variable 'import-cost--decorations-list)))
