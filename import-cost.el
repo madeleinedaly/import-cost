@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-12 19:36:11>
+;; Last-Updated: <2018-05-12 20:23:03>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -46,7 +46,7 @@
   :group 'import-cost
   :type '(choice color face))
 
-(defcustom import-cost-medium-package-color "#7cc36e"
+(defcustom import-cost-medium-package-color "#ebbe3b"
   "Decoration color for medium packages."
   :group 'import-cost
   :type '(choice color face))
