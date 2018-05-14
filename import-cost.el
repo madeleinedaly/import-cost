@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-13 20:24:46>
+;; Last-Updated: <2018-05-13 22:19:42>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -150,6 +150,12 @@
            when (import-cost--members-p cells package-info)
            collect package-info))
 
+(defun import-cost--find-file-buffer (filename)
+  "Returns the buffer that is visiting FILENAME if it exists."
+  (cl-loop for buffer being the buffers
+           when (equal filename (buffer-file-name buffer))
+           return buffer))
+
 (defun import-cost--bytes-to-kilobytes (bytes)
   "Returns BYTES in kilobytes."
   (/ bytes 1000.0))
@@ -184,13 +190,18 @@
           ((eq import-cost-bundle-size-decoration 'minified) (format " %dKB" size))
           ((eq import-cost-bundle-size-decoration 'gzipped) (format " %dKB" gzip)))))
 
+(defun import-cost--strip-quotes (str)
+  "Returns STR stripped of double-quotes."
+  (replace-regexp-in-string (regexp-quote "\"") "" str t t))
+
 (defun import-cost--decorate! (package-info)
   "Adds an overlay at the end of the line described by PACKAGE-INFO."
-  (let* ((line (import-cost--alist-get 'line package-info))
+  (let* ((filename (import-cost--alist-get 'filename package-info))
+         (line (import-cost--alist-get 'line package-info))
+         (buffer (import-cost--find-file-buffer filename))
          (message-string (import-cost--get-decoration-message package-info))
-         (color (import-cost--get-decoration-color package-info))
-         (buf (import-cost--alist-get 'buffer package-info)))
-    (with-current-buffer (get-buffer buf)
+         (color (import-cost--get-decoration-color package-info)))
+    (with-current-buffer buffer
       (save-excursion
         (goto-char (point-min))
         (forward-line line)
@@ -198,7 +209,8 @@
         (let* ((overlay (ov-create (point) (point)))
                (after-string (propertize message-string 'font-lock-face (cons 'foreground-color color)))
                (decoration (ov-set overlay 'after-string after-string)))
-          (push (cons 'decoration decoration) package-info))))))
+          (push (cons 'decoration (point)) package-info)
+          (push (cons 'buffer (import-cost--strip-quotes (buffer-name buffer))) package-info))))))
 
 (defun import-cost--activate! ()
   "Activates `import-cost-mode' in the current buffer, and instantiates a new EPC server if one is
@@ -243,31 +255,24 @@ If no other buffers are actively using this minor mode, the EPC server will be s
       (message "Error calculating import cost for %S: %S" package-name package-info)
       nil)))
 
-(defun import-cost--merge-buffer (buf package-info-list)
-  "Add a new cons cell of the form (buffer . BUF) to each alist in PACKAGE-INFO-LIST."
-  (mapcar (lambda (package-info) (push (cons 'buffer buf) package-info)) package-info-list))
-
 (defun import-cost--process-active-buffer! ()
   "Passes the entire contents of the current buffer to the EPC server for processing, and on
 successful response adds import size overlays to the buffer."
-  (let* ((filename (buffer-file-name))
+  (let* ((buffer (current-buffer))
+         (filename (buffer-file-name))
          (contents (import-cost--buffer-string-no-properties))
          (language (import-cost--language filename))
-         (args (list filename contents language))
-         (buf (current-buffer)))
+         (args (list filename contents language)))
     (deferred:$
       (epc:call-deferred import-cost--epc-server 'calculate args)
       (deferred:nextc it
         (lambda (package-info-list)
           (setq import-cost--decorations-list
                 (let* ((package-infos (mapcar #'import-cost--intern-keys package-info-list))
-                       (valid-package-infos (import-cost--filter #'import-cost--valid-p package-infos))
-                       (buffer-package-infos (import-cost--merge-buffer buf valid-package-infos)))
-                  (with-current-buffer (get-buffer buf)
+                       (valid-package-infos (import-cost--filter #'import-cost--valid-p package-infos)))
+                  (with-current-buffer buffer
                     (ov-clear (point-min) (point-max)))
-                  (mapcar #'import-cost--decorate! buffer-package-infos)))
-          ;; for debugging:
-          (describe-variable 'import-cost--decorations-list)))
+                  (mapcar #'import-cost--decorate! valid-package-infos)))))
       (deferred:error it 'error))))
 
 (defun import-cost--line-numbers-in-region (beg end)
