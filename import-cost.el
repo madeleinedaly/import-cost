@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-13 20:04:24>
+;; Last-Updated: <2018-05-13 20:24:46>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -83,7 +83,7 @@
   :group 'import-cost
   :type 'string)
 
-(defcustom import-cost-lighter " ₡"
+(defcustom import-cost-lighter " ₵"
   "Lighter used in the mode-line while `import-cost-mode' is active."
   :type 'string
   :group 'import-cost)

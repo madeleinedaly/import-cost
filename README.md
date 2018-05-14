@@ -116,7 +116,7 @@ The path to the file where import size decoration data gets persisted across ses
 
 Lighter used in the mode-line while `import-cost-mode` is active.
 
-* Default: `" ₡"`
+* Default: `" ₵"`
 
 ## License
 
