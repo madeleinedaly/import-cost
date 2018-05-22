@@ -23,7 +23,7 @@ const isInstalled = dependency => {
   }
 };
 
-const ensureDependencies = () => {
+const ensureInstall = () => {
   const {dependencies} = require('./package.json');
   if (Object.keys(dependencies).every(isInstalled)) {
     return Promise.resolve();
@@ -33,7 +33,7 @@ const ensureDependencies = () => {
   }
 };
 
-const normalize = results => results.map(result => {
+const transform = results => results.map(result => {
   if (result.error) {
     // keep only the top of the stacktrace
     result.error = result.error[0].split('\n')[1];
@@ -54,7 +54,7 @@ if (require.main === module) {
 
   (async () => {
     try {
-      await ensureDependencies();
+      await ensureInstall();
 
       const {importCost, cleanup} = require('import-cost');
       const {startServer} = require('elrpc');
@@ -68,7 +68,7 @@ if (require.main === module) {
         }
 
         emitters[filename] = importCost(filename, contents, language);
-        emitters[filename].on('done', results => resolve(normalize(results)));
+        emitters[filename].on('done', results => resolve(transform(results)));
       }));
 
       server.defineMethod('disconnect', filename => {

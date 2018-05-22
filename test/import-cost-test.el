@@ -1,7 +1,7 @@
 ;;; import-cost-test.el --- Tests for import-cost
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-13 19:44:32>
+;; Last-Updated: <2018-05-21 20:41:12>
 
 (ert-deftest import-cost-util/filter ()
   (should (equal (import-cost--filter #'cl-evenp '(1 2 3 4 5 6 7 8 9 10))
@@ -66,7 +66,7 @@
   (let* ((import-cost-bundle-size-decoration 'both)
          (package-info '((size . 203890) (gzip . 36890)))
          (decoration-message (import-cost--get-decoration-message package-info)))
-    (should (equal " 203KB (gzipped: 36KB)"
+    (should (equal " 204KB (gzipped: 37KB)"
                    decoration-message))))
 
 (ert-deftest import-cost-ui/color ()
