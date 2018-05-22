@@ -5,7 +5,7 @@
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Maintainer: Madeleine Daly <madeleine.faye.daly@gmail.com>
 ;; Created: <2018-04-08 21:28:52>
-;; Last-Updated: <2018-05-13 22:19:42>
+;; Last-Updated: <2018-05-21 23:10:21>
 ;; Version: 1.0.0
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (ov "1.0.6"))
 ;; Keywords: javascript js
@@ -140,15 +140,17 @@
 
 (defun import-cost--members-p (cells alist)
   "Returns t if all CELLS are members of ALIST, nil otherwise."
-  (cl-loop for cell in cells
-           collect (member cell alist) into results
-           return (> (length (delq nil results)) 0)))
+  (= (length cells)
+     (length (cl-loop for cell in cells
+                      when (member cell alist)
+                      collect t into results
+                      return results))))
 
-(defun import-cost--find-package-infos (cells)
-  "Returns a list elements from `import-cost--decorations-list' that each contain cons cells equal to CELLS."
-  (cl-loop for package-info in import-cost--decorations-list
-           when (import-cost--members-p cells package-info)
-           collect package-info))
+(defun import-cost--find (cells list)
+  "Returns a list elements (alists) from LIST that each contain cons cells equal to CELLS."
+  (car (cl-loop for package-info in list
+                when (import-cost--members-p cells package-info)
+                collect package-info)))
 
 (defun import-cost--find-file-buffer (filename)
   "Returns the buffer that is visiting FILENAME if it exists."
@@ -156,6 +158,7 @@
            when (equal filename (buffer-file-name buffer))
            return buffer))
 
+;; FIXME: see unit test
 (defun import-cost--bytes-to-kilobytes (bytes)
   "Returns BYTES in kilobytes."
   (/ bytes 1000.0))

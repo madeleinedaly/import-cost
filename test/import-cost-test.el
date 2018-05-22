@@ -1,7 +1,7 @@
 ;;; import-cost-test.el --- Tests for import-cost
 
 ;; Author: Madeleine Daly <madeleine.faye.daly@gmail.com>
-;; Last-Updated: <2018-05-21 20:53:25>
+;; Last-Updated: <2018-05-21 23:02:05>
 
 (ert-deftest import-cost-util/filter ()
   (should (equal (import-cost--filter #'cl-evenp '(1 2 3 4 5 6 7 8 9 10))
@@ -30,6 +30,45 @@
                     (error . "uh-oh spaghetti-o")
                     (filename . "/Users/mdaly/Code/import-cost/buffer-file.js")))
                  t)))
+
+(ert-deftest import-cost-utils/find ()
+  (let ((decorations-list
+         '(((buffer . "buffer-file.js<Code/import-cost>")
+            (decoration . 67)
+            (name . "lodash")
+            (line . 1)
+            (string . "require('lodash')")
+            (size . 72269)
+            (gzip . 25213)
+            (filename . "/Users/mdaly/Code/import-cost/buffer-file.js"))
+           ((buffer . "buffer-file.js<Code/import-cost>")
+            (decoration . 116)
+            (name . "lodash/capitalize")
+            (line . 2)
+            (string . "require('lodash/capitalize')")
+            (size . 3477)
+            (gzip . 1346)
+            (filename . "/Users/mdaly/Code/import-cost/buffer-file.js"))
+           ((buffer . "buffer-file.js<Code/import-cost>")
+            (decoration . 151)
+            (name . "lodash/map")
+            (line . 3)
+            (string . "require('lodash/map')")
+            (size . 20041)
+            (gzip . 5860)
+            (filename . "/Users/mdaly/Code/import-cost/buffer-file.js")))))
+    (should (equal (import-cost--find
+                    '((buffer . "buffer-file.js<Code/import-cost>")
+                      (line . 3))
+                    decorations-list)
+                   '((buffer . "buffer-file.js<Code/import-cost>")
+                     (decoration . 151)
+                     (name . "lodash/map")
+                     (line . 3)
+                     (string . "require('lodash/map')")
+                     (size . 20041)
+                     (gzip . 5860)
+                     (filename . "/Users/mdaly/Code/import-cost/buffer-file.js"))))))
 
 (ert-deftest import-cost-util/intern-keys ()
   (should (equal (import-cost--intern-keys
